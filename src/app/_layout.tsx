@@ -12,7 +12,7 @@ function Gate() {
     const inAuthGroup = segments[0] === "(auth)";
     if (!session && !inAuthGroup) router.replace("/(auth)/login");
     else if (session && inAuthGroup) router.replace("/(app)");
-  }, [session, loading, segments]);
+  }, [session, loading, segments, router]);
 
   return <Stack screenOptions={{ headerShown: false }} />;
 }
