@@ -55,7 +55,8 @@
     "lint": "expo lint",
     "test": "jest",
     "db:link": "supabase link --project-ref ppgjvqoutuxwhvhyaqhj",
-    "db:push": "supabase db push"
+    "db:push": "supabase db push",
+    "vercel-build": "expo export --platform web"
   },
   "jest": {
     "preset": "jest-expo",
