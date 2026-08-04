@@ -29,7 +29,7 @@ create table workout_blocks (
   id uuid primary key default gen_random_uuid(),
   workout_id uuid not null references workouts(id) on delete cascade,
   "order" int not null,
-  exercise_id uuid not null references exercises(id),
+  exercise_id uuid not null references exercises(id) on delete restrict,
   work_secs int not null,
   rest_secs int not null,
   rounds int not null default 1,
