@@ -22,7 +22,7 @@ describe("supabase client", () => {
 
   test("on native: passes persistSession=true, autoRefreshToken=true, detectSessionInUrl=false", () => {
     const { createClient } = loadModule("ios");
-    const [, , opts] = createClient.mock.calls[0];
+    const [, , opts] = createClient.mock.calls[0] as any[];
     expect(opts.auth.persistSession).toBe(true);
     expect(opts.auth.autoRefreshToken).toBe(true);
     expect(opts.auth.detectSessionInUrl).toBe(false);
@@ -30,7 +30,7 @@ describe("supabase client", () => {
 
   test("on native: passes a LargeSecureStore as storage", () => {
     const { createClient } = loadModule("ios");
-    const [, , opts] = createClient.mock.calls[0];
+    const [, , opts] = createClient.mock.calls[0] as any[];
     expect(opts.auth.storage).toBeDefined();
     expect(typeof opts.auth.storage.getItem).toBe("function");
     expect(typeof opts.auth.storage.setItem).toBe("function");
@@ -39,7 +39,7 @@ describe("supabase client", () => {
 
   test("on web: omits custom storage (default localStorage)", () => {
     const { createClient } = loadModule("web");
-    const [, , opts] = createClient.mock.calls[0];
+    const [, , opts] = createClient.mock.calls[0] as any[];
     expect(opts.auth.persistSession).toBe(true);
     expect(opts.auth.autoRefreshToken).toBe(true);
     expect(opts.auth.detectSessionInUrl).toBe(false);
