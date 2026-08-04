@@ -53,7 +53,9 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test": "jest"
+    "test": "jest",
+    "db:link": "supabase link --project-ref ppgjvqoutuxwhvhyaqhj",
+    "db:push": "supabase db push"
   },
   "jest": {
     "preset": "jest-expo",
