@@ -18,6 +18,8 @@ jest.mock("../../lib/catalog", () => ({ listExercises: (...a: any[]) => mockList
 
 import Library from "../(app)/library";
 
+beforeEach(() => mockListExercises.mockClear());
+
 test("lists exercises returned by the catalog", async () => {
   const { getByText } = await render(<Library />);
   await waitFor(() => expect(getByText("Push Up")).toBeTruthy());

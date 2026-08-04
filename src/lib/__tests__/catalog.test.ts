@@ -20,6 +20,10 @@ jest.mock("../supabase", () => {
 import { listExercises } from "../catalog";
 import { supabase } from "../supabase";
 
+beforeEach(() => {
+  (supabase as any).__builder.ilike.mockClear();
+});
+
 test("normalizes exercises rows into CatalogExercise shape", async () => {
   const items = await listExercises();
   expect(items).toEqual([
@@ -41,7 +45,6 @@ test("applies a case-insensitive name filter when search is given", async () => 
 });
 
 test("does not filter when no search is given", async () => {
-  (supabase as any).__builder.ilike.mockClear();
   await listExercises();
   expect((supabase as any).__builder.ilike).not.toHaveBeenCalled();
 });

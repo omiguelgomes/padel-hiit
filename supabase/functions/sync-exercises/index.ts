@@ -32,6 +32,12 @@ Deno.serve(async () => {
     }
 
     const body = await res.json();
+    if (!Array.isArray(body.data)) {
+      return new Response(
+        `Unexpected upstream body at cursor ${after ?? "start"}`,
+        { status: 502 },
+      );
+    }
     const rows = (body.data as ApiExercise[]).map(mapExerciseToRow);
 
     const { error } = await supabase
@@ -42,6 +48,16 @@ Deno.serve(async () => {
     }
 
     synced += rows.length;
+
+    // Fail loudly rather than silently stopping mid-sync: if upstream claims
+    // another page but gives no cursor, an empty string would fall through
+    // the falsy check below and end the loop with a partial (but "successful") sync.
+    if (body.meta?.hasNextPage && !body.meta.nextCursor) {
+      return new Response(
+        "Upstream returned hasNextPage:true with empty nextCursor",
+        { status: 502 },
+      );
+    }
     after = body.meta?.hasNextPage ? body.meta.nextCursor : undefined;
   } while (after);
 
