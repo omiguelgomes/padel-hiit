@@ -2,7 +2,7 @@
 import {
   flattenWorkout,
   totalDurationSecs,
-  type BlockDef,
+  type WorkoutSettings,
   type EngineExercise,
 } from "../workout-engine";
 
@@ -21,84 +21,70 @@ const reaction: EngineExercise = {
   config: { pool: [] },
 };
 
-const block = (over: Partial<BlockDef> = {}): BlockDef => ({
-  exercise: standard,
+const settings = (over: Partial<WorkoutSettings> = {}): WorkoutSettings => ({
   workSecs: 30,
   restSecs: 10,
-  rounds: 1,
   sets: 1,
   ...over,
 });
 
-test("inserts rest between rounds but never after the last round", () => {
-  const steps = flattenWorkout([block({ rounds: 3 })]);
-  expect(steps.map((s) => s.kind)).toEqual([
-    "work",
-    "rest",
-    "work",
-    "rest",
-    "work",
-  ]);
-});
-
-test("a single work interval produces no rest", () => {
-  const steps = flattenWorkout([block({ rounds: 1, sets: 1 })]);
+test("single exercise, single set produces one work and no rest", () => {
+  const steps = flattenWorkout([standard], settings());
   expect(steps.map((s) => s.kind)).toEqual(["work"]);
 });
 
-test("skips rest steps when restSecs is 0", () => {
-  const steps = flattenWorkout([block({ rounds: 3, restSecs: 0 })]);
-  expect(steps.map((s) => s.kind)).toEqual(["work", "work", "work"]);
-});
-
-test("expands sets x rounds and rests between all but the last work", () => {
-  const steps = flattenWorkout([block({ rounds: 2, sets: 2 })]);
-  // 4 works, 3 rests, no trailing rest
+test("rest is uniform between exercises with no trailing rest", () => {
+  const steps = flattenWorkout([standard, reaction, standard], settings());
   expect(steps.map((s) => s.kind)).toEqual([
-    "work",
-    "rest",
-    "work",
-    "rest",
-    "work",
-    "rest",
-    "work",
-  ]);
-  const works = steps.filter((s) => s.kind === "work");
-  expect(works.map((w: any) => [w.set, w.round])).toEqual([
-    [1, 1],
-    [1, 2],
-    [2, 1],
-    [2, 2],
+    "work", "rest", "work", "rest", "work",
   ]);
 });
 
-test("does not insert rest between separate blocks", () => {
-  const steps = flattenWorkout([
-    block({ exercise: standard, rounds: 3, restSecs: 10 }),
-    block({ exercise: reaction, rounds: 2, restSecs: 15, workSecs: 40 }),
-  ]);
+test("repeats the whole circuit `sets` times, no trailing rest at the very end", () => {
+  const steps = flattenWorkout([standard, reaction], settings({ sets: 2 }));
+  // set1: work rest work rest, set2: work rest work
   expect(steps.map((s) => s.kind)).toEqual([
-    "work", "rest", "work", "rest", "work", // block 1
-    "work", "rest", "work",                 // block 2 — starts with work, no bridging rest
+    "work", "rest", "work", "rest", "work", "rest", "work",
+  ]);
+  const works = steps.filter((s) => s.kind === "work") as any[];
+  expect(works.map((w) => [w.set, w.totalSets])).toEqual([
+    [1, 2], [1, 2], [2, 2], [2, 2],
   ]);
 });
 
-test("carries reaction range on reaction work steps and null otherwise", () => {
-  const steps = flattenWorkout([
-    block({ exercise: standard }),
-    block({
-      exercise: reaction,
-      reactionMinSecs: 2,
-      reactionMaxSecs: 5,
-    }),
-  ]);
+test("skips all rest when restSecs <= 0", () => {
+  const steps = flattenWorkout([standard, reaction], settings({ restSecs: 0, sets: 2 }));
+  expect(steps.map((s) => s.kind)).toEqual(["work", "work", "work", "work"]);
+});
+
+test("carries workout-level reaction range on reaction exercises, null otherwise", () => {
+  const steps = flattenWorkout(
+    [standard, reaction],
+    settings({ reactionMinSecs: 2, reactionMaxSecs: 5 }),
+  );
   const works = steps.filter((s) => s.kind === "work") as any[];
   expect(works[0].reaction).toBeNull();
   expect(works[1].reaction).toEqual({ minSecs: 2, maxSecs: 5 });
 });
 
+test("reaction is null when range is not set even for reaction exercises", () => {
+  const steps = flattenWorkout([reaction], settings());
+  const works = steps.filter((s) => s.kind === "work") as any[];
+  expect(works[0].reaction).toBeNull();
+});
+
+test("work steps carry the configured duration", () => {
+  const steps = flattenWorkout([standard], settings({ workSecs: 45 }));
+  expect((steps[0] as any).durationSecs).toBe(45);
+});
+
 test("totalDurationSecs sums every step", () => {
-  const steps = flattenWorkout([block({ rounds: 3, workSecs: 30, restSecs: 10 })]);
-  // 3*30 + 2*10
-  expect(totalDurationSecs(steps)).toBe(110);
+  // 2 exercises, 2 sets, workSecs 30, restSecs 10:
+  // works = 4*30 = 120; rests = 3*10 = 30 (no trailing) => 150
+  const steps = flattenWorkout([standard, reaction], settings({ sets: 2 }));
+  expect(totalDurationSecs(steps)).toBe(150);
+});
+
+test("empty exercise list produces no steps", () => {
+  expect(flattenWorkout([], settings())).toEqual([]);
 });
