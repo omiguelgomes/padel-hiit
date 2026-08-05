@@ -32,6 +32,7 @@ jest.mock("../../lib/workouts", () => ({
 import Player from "../(app)/player/[id]";
 
 beforeEach(() => jest.clearAllMocks());
+afterEach(() => jest.useRealTimers());
 
 test("loads the workout and shows the first work step", async () => {
   const { findByText } = await render(<Player />);
@@ -55,7 +56,7 @@ test("on a reaction call-out, speaks a direction and flashes the court", async (
   mockGetWorkout.mockResolvedValueOnce({
     id: "w1",
     name: "Reaction WOD",
-    settings: { workSecs: 30, restSecs: 0, sets: 1, reactionMinSecs: 1, reactionMaxSecs: 1 },
+    settings: { workSecs: 30, restSecs: 0, sets: 1, reactionMinSecs: 2, reactionMaxSecs: 2 },
     exercises: [
       {
         id: "r1",
@@ -67,12 +68,12 @@ test("on a reaction call-out, speaks a direction and flashes the court", async (
     ],
   });
 
-  const { findByText, getByTestId } = await render(<Player />);
+  const { findByText, getByTestId, queryByTestId } = await render(<Player />);
   await findByText("Volley");
 
-  // advance past the ~1s call-out interval
+  // advance past the 2s call-out interval
   await act(async () => {
-    jest.advanceTimersByTime(1100);
+    jest.advanceTimersByTime(2100);
   });
 
   // a direction was spoken (one of the three)
@@ -84,5 +85,7 @@ test("on a reaction call-out, speaks a direction and flashes the court", async (
   // the court flash rendered
   expect(getByTestId("court-flash")).toBeTruthy();
 
-  jest.useRealTimers();
+  // flash clears after ~1s
+  await act(async () => { jest.advanceTimersByTime(1000); });
+  expect(queryByTestId("court-flash")).toBeNull();
 });

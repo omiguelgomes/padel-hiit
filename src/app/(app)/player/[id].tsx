@@ -116,6 +116,7 @@ export default function Player() {
     return () => {
       clearTimeout(timer);
       clearTimeout(flashTimer);
+      setFlashDir(null);
     };
   }, [paused, step, index]);
 
