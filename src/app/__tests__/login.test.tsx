@@ -17,3 +17,11 @@ test("submits credentials to signIn", async () => {
   fireEvent.press(getByText("Log in"));
   await waitFor(() => expect(mockSignIn).toHaveBeenCalledWith("a@b.com", "secret123"));
 });
+
+test("shows a clear error and does not call auth when fields are empty", async () => {
+  mockSignIn.mockClear();
+  const { getByText } = await render(<LoginScreen />);
+  fireEvent.press(getByText("Log in"));
+  await waitFor(() => expect(getByText("Enter your email and password.")).toBeTruthy());
+  expect(mockSignIn).not.toHaveBeenCalled();
+});

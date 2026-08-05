@@ -9,7 +9,11 @@ export default function LoginScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const submit = async (fn: (e: string, p: string) => Promise<{ error: Error | null }>) => {
-    const { error } = await fn(email, password);
+    if (!email.trim() || !password) {
+      setError("Enter your email and password.");
+      return;
+    }
+    const { error } = await fn(email.trim(), password);
     setError(error ? error.message : null);
   };
 
