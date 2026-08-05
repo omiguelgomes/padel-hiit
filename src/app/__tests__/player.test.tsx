@@ -46,6 +46,6 @@ test("Skip advances from the first work step to the rest step", async () => {
   await act(async () => {
     fireEvent.press(getByText("Skip"));
   });
-  // 2 rounds with 10s rest between -> after first work comes a rest step
+  // 2 exercises, 2 sets — after the first exercise comes a rest step
   expect(await findByText("Rest")).toBeTruthy();
 });

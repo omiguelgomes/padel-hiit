@@ -21,6 +21,8 @@ export default function Builder() {
   const [reactionMin, setReactionMin] = useState(2);
   const [reactionMax, setReactionMax] = useState(5);
   const [exercises, setExercises] = useState<CatalogExercise[]>([]);
+  // Ref mirrors exercises state — save() reads the ref directly to avoid a stale
+  // closure under React 19 + @testing-library/react-native v14 async-act flushing.
   const exercisesRef = useRef<CatalogExercise[]>([]);
   const [error, setError] = useState<string | null>(null);
 
