@@ -44,7 +44,7 @@ export default function Player() {
         setSteps(flat);
         setRemaining(flat[0]?.durationSecs ?? 0);
         setLoaded(true);
-        announce(flat[0] ?? null);
+        if (flat.length > 0) announce(flat[0]);
       })
       .catch(() => active && setLoaded(true));
     return () => {
