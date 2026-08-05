@@ -41,3 +41,14 @@ export function nextDelayMs(
   const hi = Math.max(0, Math.max(minSecs, maxSecs));
   return Math.round((lo + rnd() * (hi - lo)) * 1000);
 }
+
+export type ReactionDirection = "left" | "center" | "right";
+
+// A random shot target for a reaction call-out. Randomness is injected so the
+// Player's cue is deterministic under test, matching pickMove / nextDelayMs.
+export function pickDirection(
+  rnd: () => number = Math.random,
+): ReactionDirection {
+  const dirs: ReactionDirection[] = ["left", "center", "right"];
+  return dirs[Math.floor(rnd() * dirs.length)];
+}

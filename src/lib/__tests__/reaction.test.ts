@@ -1,4 +1,4 @@
-import { readPool, pickMove, nextDelayMs } from "../reaction";
+import { readPool, pickMove, nextDelayMs, pickDirection } from "../reaction";
 
 describe("readPool", () => {
   test("maps spec-shaped pool entries", () => {
@@ -43,5 +43,16 @@ describe("nextDelayMs", () => {
   test("tolerates reversed bounds and clamps negatives", () => {
     expect(nextDelayMs(5, 2, () => 0)).toBe(2000);
     expect(nextDelayMs(-3, -1, () => 0)).toBe(0);
+  });
+});
+
+describe("pickDirection", () => {
+  test("maps injected randomness across the three directions", () => {
+    expect(pickDirection(() => 0)).toBe("left");
+    expect(pickDirection(() => 0.5)).toBe("center");
+    expect(pickDirection(() => 0.99)).toBe("right");
+  });
+  test("defaults to Math.random and returns a valid direction", () => {
+    expect(["left", "center", "right"]).toContain(pickDirection());
   });
 });
