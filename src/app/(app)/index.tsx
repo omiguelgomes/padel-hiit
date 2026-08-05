@@ -10,6 +10,9 @@ export default function Home() {
       <Link href="/library" style={{ fontSize: 16, color: "#2563eb" }}>
         Browse exercises
       </Link>
+      <Link href="/workouts" style={{ fontSize: 16, color: "#2563eb" }}>
+        My workouts
+      </Link>
       <Pressable onPress={signOut} style={{ padding: 12 }}>
         <Text>Log out</Text>
       </Pressable>
