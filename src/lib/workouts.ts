@@ -1,5 +1,6 @@
 // src/lib/workouts.ts
 import { supabase } from "./supabase";
+import type { BlockDef } from "./workout-engine";
 
 export type WorkoutSummary = {
   id: string;
@@ -63,6 +64,44 @@ export async function createWorkout(input: {
   }
 
   return workout.id;
+}
+
+export type WorkoutDetail = {
+  id: string;
+  name: string;
+  blocks: BlockDef[];
+};
+
+export async function getWorkout(id: string): Promise<WorkoutDetail> {
+  const { data, error } = await supabase
+    .from("workouts")
+    .select(
+      "id, name, workout_blocks(order, work_secs, rest_secs, rounds, sets, reaction_min_secs, reaction_max_secs, exercises(id, name, type, media_url, config))",
+    )
+    .eq("id", id)
+    .single();
+  if (error) throw error;
+
+  const blocks: BlockDef[] = (data.workout_blocks ?? [])
+    .slice()
+    .sort((a: any, b: any) => a.order - b.order)
+    .map((b: any) => ({
+      exercise: {
+        id: b.exercises.id,
+        name: b.exercises.name,
+        type: b.exercises.type,
+        mediaUrl: b.exercises.media_url ?? null,
+        config: b.exercises.config ?? {},
+      },
+      workSecs: b.work_secs,
+      restSecs: b.rest_secs,
+      rounds: b.rounds,
+      sets: b.sets,
+      reactionMinSecs: b.reaction_min_secs,
+      reactionMaxSecs: b.reaction_max_secs,
+    }));
+
+  return { id: data.id, name: data.name, blocks };
 }
 
 export async function deleteWorkout(id: string): Promise<void> {

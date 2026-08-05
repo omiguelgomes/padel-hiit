@@ -13,7 +13,7 @@ jest.mock("../supabase", () => {
   builder.eq = jest.fn((col: string, val: string) => {
     state.deletedEqCol = col;
     state.deletedEq = val;
-    return Promise.resolve({ error: null });
+    return builder; // chainable: supports .eq(...).single() and await .delete().eq(...)
   });
   builder.delete = jest.fn(() => builder);
   builder.insert = jest.fn((payload: any) => {
@@ -37,7 +37,7 @@ jest.mock("../supabase", () => {
   };
 });
 
-import { listWorkouts, createWorkout, deleteWorkout } from "../workouts";
+import { listWorkouts, createWorkout, deleteWorkout, getWorkout } from "../workouts";
 import { supabase } from "../supabase";
 
 beforeEach(() => {
@@ -124,4 +124,43 @@ test("deleteWorkout filters by id", async () => {
   expect((supabase as any).__builder.delete).toHaveBeenCalled();
   expect(state.deletedEqCol).toBe("id");
   expect(state.deletedEq).toBe("w1");
+});
+
+test("getWorkout maps nested blocks into engine BlockDefs sorted by order", async () => {
+  (supabase as any).__builder.single.mockResolvedValueOnce({
+    data: {
+      id: "w1",
+      name: "Padel HIIT",
+      workout_blocks: [
+        {
+          order: 1,
+          work_secs: 40, rest_secs: 15, rounds: 2, sets: 1,
+          reaction_min_secs: 2, reaction_max_secs: 5,
+          exercises: { id: "e2", name: "Reaction Swing", type: "reaction", media_url: "https://x/bh.mp4", config: { pool: [] } },
+        },
+        {
+          order: 0,
+          work_secs: 30, rest_secs: 10, rounds: 3, sets: 1,
+          reaction_min_secs: null, reaction_max_secs: null,
+          exercises: { id: "e1", name: "Jumping Jacks", type: "standard", media_url: null, config: {} },
+        },
+      ],
+    },
+    error: null,
+  });
+
+  const out = await getWorkout("w1");
+
+  expect((supabase as any).from).toHaveBeenCalledWith("workouts");
+  expect(out.id).toBe("w1");
+  expect(out.name).toBe("Padel HIIT");
+  // sorted by order: standard first, reaction second
+  expect(out.blocks.map((b) => b.exercise.id)).toEqual(["e1", "e2"]);
+  expect(out.blocks[0]).toEqual({
+    exercise: { id: "e1", name: "Jumping Jacks", type: "standard", mediaUrl: null, config: {} },
+    workSecs: 30, restSecs: 10, rounds: 3, sets: 1,
+    reactionMinSecs: null, reactionMaxSecs: null,
+  });
+  expect(out.blocks[1].reactionMinSecs).toBe(2);
+  expect(out.blocks[1].exercise.mediaUrl).toBe("https://x/bh.mp4");
 });
