@@ -46,9 +46,14 @@ export default function Workouts() {
             }}
           >
             <Text style={{ fontSize: 16 }}>{item.name}</Text>
-            <Pressable onPress={() => remove(item.id)} style={{ padding: 6 }}>
-              <Text style={{ color: "#dc2626" }}>Delete</Text>
-            </Pressable>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+              <Link href={`/player/${item.id}`}>
+                <Text style={{ color: "#2563eb" }}>Play</Text>
+              </Link>
+              <Pressable onPress={() => remove(item.id)} style={{ padding: 6 }}>
+                <Text style={{ color: "#dc2626" }}>Delete</Text>
+              </Pressable>
+            </View>
           </View>
         )}
       />
