@@ -1,14 +1,17 @@
 import { useCallback, useState } from "react";
 import { View, Text, FlatList, Pressable } from "react-native";
-import { Link, useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import {
   listWorkouts,
   deleteWorkout,
   type WorkoutSummary,
 } from "../../lib/workouts";
+import { Screen, ScreenTitle, Card, Button } from "../../components/ui";
+import { colors, spacing, font } from "../../theme";
 
 export default function Workouts() {
   const [items, setItems] = useState<WorkoutSummary[]>([]);
+  const router = useRouter();
 
   const refresh = useCallback(() => {
     listWorkouts()
@@ -29,34 +32,35 @@ export default function Workouts() {
   };
 
   return (
-    <View style={{ flex: 1, padding: 16, gap: 12 }}>
-      <Link href="/builder">
-        <Text style={{ fontSize: 16, color: "#2563eb" }}>+ New workout</Text>
-      </Link>
+    <Screen>
+      <ScreenTitle>My workouts</ScreenTitle>
+      <Button label="+ New workout" onPress={() => router.push("/builder")} />
+
       <FlatList
         data={items}
         keyExtractor={(x) => x.id}
+        contentContainerStyle={{ gap: spacing.md, paddingBottom: spacing.xl }}
+        ListEmptyComponent={
+          <Text style={[font.muted, { textAlign: "center", marginTop: spacing.xl }]}>
+            No workouts yet. Create your first one.
+          </Text>
+        }
         renderItem={({ item }) => (
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              paddingVertical: 10,
-            }}
-          >
-            <Text style={{ fontSize: 16 }}>{item.name}</Text>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
-              <Link href={`/player/${item.id}`}>
-                <Text style={{ color: "#2563eb" }}>Play</Text>
-              </Link>
-              <Pressable onPress={() => remove(item.id)} style={{ padding: 6 }}>
-                <Text style={{ color: "#dc2626" }}>Delete</Text>
-              </Pressable>
+          <Card>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+              <Text style={[font.h3, { flexShrink: 1 }]}>{item.name}</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.lg }}>
+                <Pressable onPress={() => router.push(`/player/${item.id}`)}>
+                  <Text style={{ color: colors.primary, fontWeight: "700" }}>Play</Text>
+                </Pressable>
+                <Pressable onPress={() => remove(item.id)} style={{ padding: spacing.xs }}>
+                  <Text style={{ color: colors.danger, fontWeight: "600" }}>Delete</Text>
+                </Pressable>
+              </View>
             </View>
-          </View>
+          </Card>
         )}
       />
-    </View>
+    </Screen>
   );
 }

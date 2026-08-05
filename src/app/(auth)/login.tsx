@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { View, Text, TextInput, Pressable } from "react-native";
+import { View, Text } from "react-native";
 import { useAuth } from "../../lib/auth-context";
+import { Screen, Card, Button, TextField } from "../../components/ui";
+import { colors, spacing, font } from "../../theme";
 
 export default function LoginScreen() {
   const { signIn, signUp } = useAuth();
@@ -18,19 +20,25 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: "center", padding: 24, gap: 12 }}>
-      <Text style={{ fontSize: 24, fontWeight: "600" }}>Padel HIIT</Text>
-      <TextInput placeholder="Email" autoCapitalize="none" value={email}
-        onChangeText={setEmail} style={{ borderWidth: 1, padding: 12, borderRadius: 8 }} />
-      <TextInput placeholder="Password" secureTextEntry value={password}
-        onChangeText={setPassword} style={{ borderWidth: 1, padding: 12, borderRadius: 8 }} />
-      {error ? <Text style={{ color: "red" }}>{error}</Text> : null}
-      <Pressable onPress={() => submit(signIn)} style={{ backgroundColor: "#222", padding: 14, borderRadius: 8 }}>
-        <Text style={{ color: "white", textAlign: "center" }}>Log in</Text>
-      </Pressable>
-      <Pressable onPress={() => submit(signUp)} style={{ padding: 14 }}>
-        <Text style={{ textAlign: "center" }}>Create account</Text>
-      </Pressable>
-    </View>
+    <Screen scroll center>
+      <View style={{ alignItems: "center", gap: spacing.xs, marginBottom: spacing.sm }}>
+        <Text style={{ fontSize: 34, fontWeight: "800", color: colors.primary }}>Padel HIIT</Text>
+        <Text style={font.muted}>Train sharper. Move faster.</Text>
+      </View>
+
+      <Card style={{ gap: spacing.md }}>
+        <TextField
+          placeholder="Email"
+          autoCapitalize="none"
+          keyboardType="email-address"
+          value={email}
+          onChangeText={setEmail}
+        />
+        <TextField placeholder="Password" secureTextEntry value={password} onChangeText={setPassword} />
+        {error ? <Text style={{ color: colors.danger }}>{error}</Text> : null}
+        <Button label="Log in" onPress={() => submit(signIn)} />
+        <Button label="Create account" variant="ghost" onPress={() => submit(signUp)} />
+      </Card>
+    </Screen>
   );
 }

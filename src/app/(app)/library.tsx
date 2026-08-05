@@ -1,10 +1,11 @@
-import { View } from "react-native";
 import ExercisePicker from "../../components/ExercisePicker";
+import { Screen, ScreenTitle } from "../../components/ui";
 
 export default function Library() {
   return (
-    <View style={{ flex: 1, padding: 16 }}>
+    <Screen scroll>
+      <ScreenTitle>Exercises</ScreenTitle>
       <ExercisePicker onSelect={() => {}} />
-    </View>
+    </Screen>
   );
 }

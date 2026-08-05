@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { View, Text, TextInput, FlatList, Pressable } from "react-native";
+import { View, Text, FlatList, Pressable } from "react-native";
 import { Image } from "expo-image";
 import { listExercises, type CatalogExercise } from "../lib/catalog";
+import { TextField } from "./ui";
+import { colors, spacing, radius, font } from "../theme";
 
 export default function ExercisePicker({
   onSelect,
@@ -26,36 +28,44 @@ export default function ExercisePicker({
   }, [search]);
 
   return (
-    <View style={{ gap: 12 }}>
-      <TextInput
+    <View style={{ gap: spacing.md }}>
+      <TextField
         placeholder="Search exercises"
         autoCapitalize="none"
         value={search}
         onChangeText={setSearch}
-        style={{ borderWidth: 1, padding: 12, borderRadius: 8 }}
       />
       <FlatList
         data={items}
         scrollEnabled={false}
         keyExtractor={(x) => x.id}
+        contentContainerStyle={{ gap: spacing.sm }}
         renderItem={({ item }) => (
           <Pressable
             onPress={() => onSelect(item)}
-            style={{
+            style={({ pressed }) => ({
               flexDirection: "row",
-              gap: 12,
+              gap: spacing.md,
               alignItems: "center",
-              paddingVertical: 8,
-            }}
+              padding: spacing.sm,
+              borderRadius: radius.md,
+              backgroundColor: pressed ? colors.primarySoft : colors.surface,
+              borderWidth: 1,
+              borderColor: colors.border,
+            })}
           >
             {item.mediaUrl ? (
               <Image
                 source={{ uri: item.mediaUrl }}
-                style={{ width: 64, height: 64, borderRadius: 8 }}
+                style={{ width: 64, height: 64, borderRadius: radius.sm, backgroundColor: colors.bg }}
                 contentFit="cover"
               />
-            ) : null}
-            <Text style={{ fontSize: 16 }}>{item.name}</Text>
+            ) : (
+              <View
+                style={{ width: 64, height: 64, borderRadius: radius.sm, backgroundColor: colors.primarySoft }}
+              />
+            )}
+            <Text style={[font.body, { flexShrink: 1, fontWeight: "600" }]}>{item.name}</Text>
           </Pressable>
         )}
       />

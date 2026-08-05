@@ -3,6 +3,7 @@ import React from "react";
 
 jest.mock("expo-router", () => ({
   Link: ({ children }: any) => children,
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
   useFocusEffect: (cb: any) => require("react").useEffect(cb, []),
 }));
 

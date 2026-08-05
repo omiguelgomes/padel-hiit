@@ -1,6 +1,6 @@
 // src/app/(app)/builder.tsx
 import { useState, useRef } from "react";
-import { View, Text, TextInput, Pressable, ScrollView } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { useRouter } from "expo-router";
 import { type CatalogExercise } from "../../lib/catalog";
 import { createWorkout } from "../../lib/workouts";
@@ -11,6 +11,8 @@ import {
   type WorkoutSettings,
 } from "../../lib/workout-engine";
 import ExercisePicker from "../../components/ExercisePicker";
+import { Screen, ScreenTitle, Card, Button, TextField } from "../../components/ui";
+import { colors, spacing, font } from "../../theme";
 
 export default function Builder() {
   const router = useRouter();
@@ -90,70 +92,70 @@ export default function Builder() {
     value: number,
     onChange: (n: number) => void,
   ) => (
-    <View style={{ gap: 2 }}>
-      <Text style={{ fontSize: 12, color: "#666" }}>{label}</Text>
-      <TextInput
+    <View style={{ gap: spacing.xs }}>
+      <Text style={font.label}>{label}</Text>
+      <TextField
         keyboardType="number-pad"
         value={String(value)}
         onChangeText={(t) => onChange(Number(t.replace(/[^0-9]/g, "")) || 0)}
-        style={{ borderWidth: 1, padding: 8, borderRadius: 6, width: 64 }}
+        style={{ width: 72, textAlign: "center" }}
       />
     </View>
   );
 
   return (
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, gap: 16 }}>
-      <TextInput
-        placeholder="Workout name"
-        value={name}
-        onChangeText={setName}
-        style={{ borderWidth: 1, padding: 12, borderRadius: 8 }}
-      />
+    <Screen scroll>
+      <ScreenTitle>New workout</ScreenTitle>
 
-      <Text style={{ fontWeight: "600" }}>Main settings</Text>
-      <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-        {numField("Work s", workSecs, setWorkSecs)}
-        {numField("Rest s", restSecs, setRestSecs)}
-        {numField("Sets", sets, setSets)}
-        {numField("React min", reactionMin, setReactionMin)}
-        {numField("React max", reactionMax, setReactionMax)}
-      </View>
+      <TextField placeholder="Workout name" value={name} onChangeText={setName} />
 
-      <Text style={{ fontWeight: "600" }}>
+      <Card style={{ gap: spacing.md }}>
+        <Text style={font.h3}>Main settings</Text>
+        <View style={{ flexDirection: "row", gap: spacing.md, flexWrap: "wrap" }}>
+          {numField("Work s", workSecs, setWorkSecs)}
+          {numField("Rest s", restSecs, setRestSecs)}
+          {numField("Sets", sets, setSets)}
+          {numField("React min", reactionMin, setReactionMin)}
+          {numField("React max", reactionMax, setReactionMax)}
+        </View>
+      </Card>
+
+      <Text style={font.h3}>
         Exercises ({exercises.length}) — total {Math.floor(total / 60)}:
         {String(total % 60).padStart(2, "0")}
       </Text>
 
       {exercises.map((e, i) => (
-        <View
+        <Card
           key={`${e.id}-${i}`}
           style={{
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
-            borderWidth: 1,
-            borderColor: "#ddd",
-            borderRadius: 8,
-            padding: 12,
+            padding: spacing.md,
           }}
         >
-          <Text style={{ fontSize: 16 }}>{e.name}</Text>
-          <View style={{ flexDirection: "row", gap: 12 }}>
-            <Pressable onPress={() => move(i, -1)}><Text>↑</Text></Pressable>
-            <Pressable onPress={() => move(i, 1)}><Text>↓</Text></Pressable>
-            <Pressable onPress={() => remove(i)}><Text style={{ color: "#dc2626" }}>✕</Text></Pressable>
+          <Text style={[font.body, { fontWeight: "600", flexShrink: 1 }]}>{e.name}</Text>
+          <View style={{ flexDirection: "row", gap: spacing.lg, alignItems: "center" }}>
+            <Pressable onPress={() => move(i, -1)}>
+              <Text style={{ fontSize: 18, color: colors.primary }}>↑</Text>
+            </Pressable>
+            <Pressable onPress={() => move(i, 1)}>
+              <Text style={{ fontSize: 18, color: colors.primary }}>↓</Text>
+            </Pressable>
+            <Pressable onPress={() => remove(i)}>
+              <Text style={{ color: colors.danger, fontWeight: "700" }}>✕</Text>
+            </Pressable>
           </View>
-        </View>
+        </Card>
       ))}
 
-      {error ? <Text style={{ color: "red" }}>{error}</Text> : null}
+      {error ? <Text style={{ color: colors.danger }}>{error}</Text> : null}
 
-      <Pressable onPress={save} style={{ backgroundColor: "#222", padding: 14, borderRadius: 8 }}>
-        <Text style={{ color: "white", textAlign: "center" }}>Save</Text>
-      </Pressable>
+      <Button label="Save" onPress={save} />
 
-      <Text style={{ fontWeight: "600", marginTop: 8 }}>Add an exercise</Text>
+      <Text style={[font.h3, { marginTop: spacing.sm }]}>Add an exercise</Text>
       <ExercisePicker onSelect={add} />
-    </ScrollView>
+    </Screen>
   );
 }
