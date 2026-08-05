@@ -39,7 +39,7 @@ export default function Player() {
     getWorkout(id)
       .then((w) => {
         if (!active) return;
-        const flat = flattenWorkout(w.blocks);
+        const flat = flattenWorkout(w.exercises, w.settings);
         stepsRef.current = flat;
         setSteps(flat);
         setRemaining(flat[0]?.durationSecs ?? 0);
@@ -140,10 +140,9 @@ export default function Player() {
         {isRest ? "Rest" : step!.exercise.name}
       </Text>
 
-      {step!.kind === "work" ? (
+      {step!.kind === "work" && step!.totalSets > 1 ? (
         <Text style={{ color: "#666" }}>
-          Round {step!.round}/{step!.totalRounds}
-          {step!.totalSets > 1 ? ` · Set ${step!.set}/${step!.totalSets}` : ""}
+          Set {step!.set}/{step!.totalSets}
         </Text>
       ) : null}
 
