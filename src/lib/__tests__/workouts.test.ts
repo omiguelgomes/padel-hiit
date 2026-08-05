@@ -59,53 +59,41 @@ test("listWorkouts maps rows to summaries", async () => {
   expect((supabase as any).from).toHaveBeenCalledWith("workouts");
 });
 
-test("createWorkout stamps owner_id from the authed user and returns the id", async () => {
-  const id = await createWorkout({ name: "My WOD", blocks: [] });
+test("createWorkout stamps owner_id and workout-level settings, returns the id", async () => {
+  const id = await createWorkout({
+    name: "My WOD",
+    workSecs: 30,
+    restSecs: 10,
+    sets: 3,
+    reactionMinSecs: null,
+    reactionMaxSecs: null,
+    exerciseIds: [],
+  });
   expect(id).toBe("w1");
-  // First insert is the workout row, carrying owner_id from getUser().
-  expect(state.inserted[0]).toEqual({ name: "My WOD", owner_id: "user-1" });
+  expect(state.inserted[0]).toEqual({
+    name: "My WOD",
+    owner_id: "user-1",
+    work_secs: 30,
+    rest_secs: 10,
+    sets: 3,
+    reaction_min_secs: null,
+    reaction_max_secs: null,
+  });
 });
 
-test("createWorkout inserts blocks with order index and mapped columns", async () => {
+test("createWorkout inserts blocks as ordered exercise slots", async () => {
   await createWorkout({
     name: "My WOD",
-    blocks: [
-      { exerciseId: "e1", workSecs: 30, restSecs: 10, rounds: 3, sets: 1 },
-      {
-        exerciseId: "e2",
-        workSecs: 40,
-        restSecs: 15,
-        rounds: 2,
-        sets: 1,
-        reactionMinSecs: 2,
-        reactionMaxSecs: 5,
-      },
-    ],
+    workSecs: 40,
+    restSecs: 15,
+    sets: 2,
+    reactionMinSecs: 2,
+    reactionMaxSecs: 5,
+    exerciseIds: ["e1", "e2"],
   });
-  // Second insert is the blocks array.
   expect(state.inserted[1]).toEqual([
-    {
-      workout_id: "w1",
-      order: 0,
-      exercise_id: "e1",
-      work_secs: 30,
-      rest_secs: 10,
-      rounds: 3,
-      sets: 1,
-      reaction_min_secs: null,
-      reaction_max_secs: null,
-    },
-    {
-      workout_id: "w1",
-      order: 1,
-      exercise_id: "e2",
-      work_secs: 40,
-      rest_secs: 15,
-      rounds: 2,
-      sets: 1,
-      reaction_min_secs: 2,
-      reaction_max_secs: 5,
-    },
+    { workout_id: "w1", order: 0, exercise_id: "e1" },
+    { workout_id: "w1", order: 1, exercise_id: "e2" },
   ]);
 });
 
@@ -114,7 +102,7 @@ test("createWorkout throws when not signed in", async () => {
     data: { user: null },
     error: null,
   });
-  await expect(createWorkout({ name: "x", blocks: [] })).rejects.toThrow(
+  await expect(createWorkout({ name: "x", workSecs: 30, restSecs: 10, sets: 1, exerciseIds: [] })).rejects.toThrow(
     "Not signed in",
   );
 });
@@ -126,22 +114,20 @@ test("deleteWorkout filters by id", async () => {
   expect(state.deletedEq).toBe("w1");
 });
 
-test("getWorkout maps nested blocks into engine BlockDefs sorted by order", async () => {
+test("getWorkout maps settings and ordered exercises", async () => {
   (supabase as any).__builder.single.mockResolvedValueOnce({
     data: {
       id: "w1",
       name: "Padel HIIT",
+      work_secs: 40, rest_secs: 15, sets: 2,
+      reaction_min_secs: 2, reaction_max_secs: 5,
       workout_blocks: [
         {
           order: 1,
-          work_secs: 40, rest_secs: 15, rounds: 2, sets: 1,
-          reaction_min_secs: 2, reaction_max_secs: 5,
           exercises: { id: "e2", name: "Reaction Swing", type: "reaction", media_url: "https://x/bh.mp4", config: { pool: [] } },
         },
         {
           order: 0,
-          work_secs: 30, rest_secs: 10, rounds: 3, sets: 1,
-          reaction_min_secs: null, reaction_max_secs: null,
           exercises: { id: "e1", name: "Jumping Jacks", type: "standard", media_url: null, config: {} },
         },
       ],
@@ -154,13 +140,14 @@ test("getWorkout maps nested blocks into engine BlockDefs sorted by order", asyn
   expect((supabase as any).from).toHaveBeenCalledWith("workouts");
   expect(out.id).toBe("w1");
   expect(out.name).toBe("Padel HIIT");
-  // sorted by order: standard first, reaction second
-  expect(out.blocks.map((b) => b.exercise.id)).toEqual(["e1", "e2"]);
-  expect(out.blocks[0]).toEqual({
-    exercise: { id: "e1", name: "Jumping Jacks", type: "standard", mediaUrl: null, config: {} },
-    workSecs: 30, restSecs: 10, rounds: 3, sets: 1,
-    reactionMinSecs: null, reactionMaxSecs: null,
+  expect(out.settings).toEqual({
+    workSecs: 40, restSecs: 15, sets: 2,
+    reactionMinSecs: 2, reactionMaxSecs: 5,
   });
-  expect(out.blocks[1].reactionMinSecs).toBe(2);
-  expect(out.blocks[1].exercise.mediaUrl).toBe("https://x/bh.mp4");
+  // sorted by order: standard first, reaction second
+  expect(out.exercises.map((e) => e.id)).toEqual(["e1", "e2"]);
+  expect(out.exercises[0]).toEqual({
+    id: "e1", name: "Jumping Jacks", type: "standard", mediaUrl: null, config: {},
+  });
+  expect(out.exercises[1].mediaUrl).toBe("https://x/bh.mp4");
 });

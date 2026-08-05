@@ -1,107 +1,89 @@
 // src/app/(app)/builder.tsx
-import { useEffect, useState } from "react";
-import { View, Text, TextInput, Pressable, FlatList, ScrollView } from "react-native";
+import { useState, useRef } from "react";
+import { View, Text, TextInput, Pressable, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
-import { listExercises, type CatalogExercise } from "../../lib/catalog";
-import { createWorkout, type NewBlock } from "../../lib/workouts";
+import { type CatalogExercise } from "../../lib/catalog";
+import { createWorkout } from "../../lib/workouts";
 import {
   flattenWorkout,
   totalDurationSecs,
-  type BlockDef,
+  type EngineExercise,
+  type WorkoutSettings,
 } from "../../lib/workout-engine";
-
-type BuilderBlock = NewBlock & { exercise: CatalogExercise };
-
-const DEFAULTS = { workSecs: 30, restSecs: 10, rounds: 3, sets: 1 };
+import ExercisePicker from "../../components/ExercisePicker";
 
 export default function Builder() {
   const router = useRouter();
   const [name, setName] = useState("");
-  const [blocks, setBlocks] = useState<BuilderBlock[]>([]);
-  const [search, setSearch] = useState("");
-  const [catalog, setCatalog] = useState<CatalogExercise[]>([]);
+  const [workSecs, setWorkSecs] = useState(30);
+  const [restSecs, setRestSecs] = useState(10);
+  const [sets, setSets] = useState(1);
+  const [reactionMin, setReactionMin] = useState(2);
+  const [reactionMax, setReactionMax] = useState(5);
+  const [exercises, setExercises] = useState<CatalogExercise[]>([]);
+  // Ref mirrors exercises state — save() reads the ref directly to avoid a stale
+  // closure under React 19 + @testing-library/react-native v14 async-act flushing.
+  const exercisesRef = useRef<CatalogExercise[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let active = true;
-    listExercises({ search })
-      .then((r) => active && setCatalog(r))
-      .catch(() => active && setCatalog([]));
-    return () => {
-      active = false;
-    };
-  }, [search]);
-
-  const addBlock = (ex: CatalogExercise) => {
-    setBlocks((b) => [
-      ...b,
-      {
-        exercise: ex,
-        exerciseId: ex.id,
-        ...DEFAULTS,
-        reactionMinSecs: ex.type === "reaction" ? 2 : null,
-        reactionMaxSecs: ex.type === "reaction" ? 5 : null,
-      },
-    ]);
+  const add = (ex: CatalogExercise) => {
+    exercisesRef.current = [...exercisesRef.current, ex];
+    setExercises(exercisesRef.current);
   };
-
-  const patch = (i: number, field: keyof NewBlock, value: number) => {
-    setBlocks((b) => b.map((blk, j) => (j === i ? { ...blk, [field]: value } : blk)));
+  const remove = (i: number) => {
+    exercisesRef.current = exercisesRef.current.filter((_, j) => j !== i);
+    setExercises(exercisesRef.current);
   };
-
   const move = (i: number, dir: -1 | 1) => {
-    setBlocks((b) => {
-      const j = i + dir;
-      if (j < 0 || j >= b.length) return b;
-      const next = [...b];
-      [next[i], next[j]] = [next[j], next[i]];
-      return next;
-    });
+    const xs = exercisesRef.current;
+    const j = i + dir;
+    if (j < 0 || j >= xs.length) return;
+    const next = [...xs];
+    [next[i], next[j]] = [next[j], next[i]];
+    exercisesRef.current = next;
+    setExercises(next);
   };
 
-  const remove = (i: number) => setBlocks((b) => b.filter((_, j) => j !== i));
+  const hasReaction = exercises.some((e) => e.type === "reaction");
 
   const save = async () => {
-    if (!name.trim() || blocks.length === 0) {
+    const current = exercisesRef.current;
+    if (!name.trim() || current.length === 0) {
       setError("Name your workout and add at least one exercise.");
       return;
     }
-    const payload = {
-      name: name.trim(),
-      blocks: blocks.map((b) => ({
-        exerciseId: b.exerciseId,
-        workSecs: b.workSecs,
-        restSecs: b.restSecs,
-        rounds: b.rounds,
-        sets: b.sets,
-        reactionMinSecs: b.reactionMinSecs ?? null,
-        reactionMaxSecs: b.reactionMaxSecs ?? null,
-      })),
-    };
+    const hasReactionNow = current.some((e) => e.type === "reaction");
     try {
-      await createWorkout(payload);
+      await createWorkout({
+        name: name.trim(),
+        workSecs,
+        restSecs,
+        sets,
+        reactionMinSecs: hasReactionNow ? reactionMin : null,
+        reactionMaxSecs: hasReactionNow ? reactionMax : null,
+        exerciseIds: current.map((e) => e.id),
+      });
       router.replace("/workouts");
     } catch (e: any) {
       setError(e?.message ?? "Could not save.");
     }
   };
 
-  const defs: BlockDef[] = blocks.map((b) => ({
-    exercise: {
-      id: b.exercise.id,
-      name: b.exercise.name,
-      type: b.exercise.type,
-      mediaUrl: b.exercise.mediaUrl,
-      config: b.exercise.config,
-    },
-    workSecs: b.workSecs,
-    restSecs: b.restSecs,
-    rounds: b.rounds,
-    sets: b.sets,
-    reactionMinSecs: b.reactionMinSecs,
-    reactionMaxSecs: b.reactionMaxSecs,
+  const engineExercises: EngineExercise[] = exercises.map((e) => ({
+    id: e.id,
+    name: e.name,
+    type: e.type,
+    mediaUrl: e.mediaUrl,
+    config: e.config,
   }));
-  const total = totalDurationSecs(flattenWorkout(defs));
+  const settings: WorkoutSettings = {
+    workSecs,
+    restSecs,
+    sets,
+    reactionMinSecs: hasReaction ? reactionMin : null,
+    reactionMaxSecs: hasReaction ? reactionMax : null,
+  };
+  const total = totalDurationSecs(flattenWorkout(engineExercises, settings));
 
   const numField = (
     label: string,
@@ -128,35 +110,38 @@ export default function Builder() {
         style={{ borderWidth: 1, padding: 12, borderRadius: 8 }}
       />
 
+      <Text style={{ fontWeight: "600" }}>Main settings</Text>
+      <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+        {numField("Work s", workSecs, setWorkSecs)}
+        {numField("Rest s", restSecs, setRestSecs)}
+        {numField("Sets", sets, setSets)}
+        {numField("React min", reactionMin, setReactionMin)}
+        {numField("React max", reactionMax, setReactionMax)}
+      </View>
+
       <Text style={{ fontWeight: "600" }}>
-        Blocks ({blocks.length}) — total {Math.floor(total / 60)}:
+        Exercises ({exercises.length}) — total {Math.floor(total / 60)}:
         {String(total % 60).padStart(2, "0")}
       </Text>
 
-      {blocks.map((b, i) => (
+      {exercises.map((e, i) => (
         <View
-          key={`${b.exerciseId}-${i}`}
-          style={{ borderWidth: 1, borderColor: "#ddd", borderRadius: 8, padding: 12, gap: 8 }}
+          key={`${e.id}-${i}`}
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            borderWidth: 1,
+            borderColor: "#ddd",
+            borderRadius: 8,
+            padding: 12,
+          }}
         >
-          <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-            <Text style={{ fontSize: 16 }}>{b.exercise.name}</Text>
-            <View style={{ flexDirection: "row", gap: 12 }}>
-              <Pressable onPress={() => move(i, -1)}><Text>↑</Text></Pressable>
-              <Pressable onPress={() => move(i, 1)}><Text>↓</Text></Pressable>
-              <Pressable onPress={() => remove(i)}><Text style={{ color: "#dc2626" }}>✕</Text></Pressable>
-            </View>
-          </View>
-          <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
-            {numField("Work s", b.workSecs, (n) => patch(i, "workSecs", n))}
-            {numField("Rest s", b.restSecs, (n) => patch(i, "restSecs", n))}
-            {numField("Rounds", b.rounds, (n) => patch(i, "rounds", n))}
-            {numField("Sets", b.sets, (n) => patch(i, "sets", n))}
-            {b.exercise.type === "reaction" ? (
-              <>
-                {numField("React min", b.reactionMinSecs ?? 0, (n) => patch(i, "reactionMinSecs", n))}
-                {numField("React max", b.reactionMaxSecs ?? 0, (n) => patch(i, "reactionMaxSecs", n))}
-              </>
-            ) : null}
+          <Text style={{ fontSize: 16 }}>{e.name}</Text>
+          <View style={{ flexDirection: "row", gap: 12 }}>
+            <Pressable onPress={() => move(i, -1)}><Text>↑</Text></Pressable>
+            <Pressable onPress={() => move(i, 1)}><Text>↓</Text></Pressable>
+            <Pressable onPress={() => remove(i)}><Text style={{ color: "#dc2626" }}>✕</Text></Pressable>
           </View>
         </View>
       ))}
@@ -168,23 +153,7 @@ export default function Builder() {
       </Pressable>
 
       <Text style={{ fontWeight: "600", marginTop: 8 }}>Add an exercise</Text>
-      <TextInput
-        placeholder="Search exercises"
-        autoCapitalize="none"
-        value={search}
-        onChangeText={setSearch}
-        style={{ borderWidth: 1, padding: 12, borderRadius: 8 }}
-      />
-      <FlatList
-        data={catalog}
-        scrollEnabled={false}
-        keyExtractor={(x) => x.id}
-        renderItem={({ item }) => (
-          <Pressable onPress={() => addBlock(item)} style={{ paddingVertical: 10 }}>
-            <Text style={{ fontSize: 16, color: "#2563eb" }}>{item.name}</Text>
-          </Pressable>
-        )}
-      />
+      <ExercisePicker onSelect={add} />
     </ScrollView>
   );
 }

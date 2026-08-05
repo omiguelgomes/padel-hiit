@@ -19,12 +19,10 @@ jest.mock("../../lib/audio", () => ({
 const mockGetWorkout = jest.fn().mockResolvedValue({
   id: "w1",
   name: "Padel HIIT",
-  blocks: [
-    {
-      exercise: { id: "e1", name: "Jumping Jacks", type: "standard", mediaUrl: null, config: {} },
-      workSecs: 30, restSecs: 10, rounds: 2, sets: 1,
-      reactionMinSecs: null, reactionMaxSecs: null,
-    },
+  settings: { workSecs: 30, restSecs: 10, sets: 2, reactionMinSecs: null, reactionMaxSecs: null },
+  exercises: [
+    { id: "e1", name: "Jumping Jacks", type: "standard", mediaUrl: null, config: {} },
+    { id: "e2", name: "High Knees", type: "standard", mediaUrl: null, config: {} },
   ],
 });
 jest.mock("../../lib/workouts", () => ({
@@ -48,6 +46,6 @@ test("Skip advances from the first work step to the rest step", async () => {
   await act(async () => {
     fireEvent.press(getByText("Skip"));
   });
-  // 2 rounds with 10s rest between -> after first work comes a rest step
+  // 2 exercises, 2 sets — after the first exercise comes a rest step
   expect(await findByText("Rest")).toBeTruthy();
 });
