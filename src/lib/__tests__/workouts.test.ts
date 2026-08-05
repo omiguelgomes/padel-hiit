@@ -1,7 +1,7 @@
 // src/lib/__tests__/workouts.test.ts
 // A chainable mock builder. Each method returns the builder; terminal calls
 // resolve via `then` or return canned values. `capture` records insert payloads.
-const state: any = { inserted: [], listRows: [], deletedEq: null };
+const state: any = { inserted: [], listRows: [], deletedEqCol: null, deletedEq: null };
 
 jest.mock("../supabase", () => {
   const builder: any = {};
@@ -10,7 +10,8 @@ jest.mock("../supabase", () => {
   builder.single = jest.fn(() =>
     Promise.resolve({ data: { id: "w1" }, error: null }),
   );
-  builder.eq = jest.fn((_col: string, val: string) => {
+  builder.eq = jest.fn((col: string, val: string) => {
+    state.deletedEqCol = col;
     state.deletedEq = val;
     return Promise.resolve({ error: null });
   });
@@ -42,6 +43,7 @@ import { supabase } from "../supabase";
 beforeEach(() => {
   state.inserted = [];
   state.listRows = [];
+  state.deletedEqCol = null;
   state.deletedEq = null;
   jest.clearAllMocks();
 });
@@ -120,5 +122,6 @@ test("createWorkout throws when not signed in", async () => {
 test("deleteWorkout filters by id", async () => {
   await deleteWorkout("w1");
   expect((supabase as any).__builder.delete).toHaveBeenCalled();
+  expect(state.deletedEqCol).toBe("id");
   expect(state.deletedEq).toBe("w1");
 });
