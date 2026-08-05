@@ -7,7 +7,8 @@ import { useAudioPlayer, setAudioModeAsync } from "expo-audio";
 import { getWorkout } from "../../../lib/workouts";
 import { flattenWorkout, type WorkoutStep } from "../../../lib/workout-engine";
 import { speak, stopSpeaking } from "../../../lib/audio";
-import { readPool, pickMove, nextDelayMs, type ReactionMove } from "../../../lib/reaction";
+import { readPool, pickMove, nextDelayMs, pickDirection, type ReactionMove, type ReactionDirection } from "../../../lib/reaction";
+import CourtFlash from "../../../components/CourtFlash";
 import { Button } from "../../../components/ui";
 import { colors, spacing, radius } from "../../../theme";
 
@@ -31,6 +32,7 @@ export default function Player() {
   const [paused, setPaused] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [call, setCall] = useState<ReactionMove | null>(null);
+  const [flashDir, setFlashDir] = useState<ReactionDirection | null>(null);
   const stepsRef = useRef<WorkoutStep[]>([]);
   const beepPlayer = useAudioPlayer(beep);
 
@@ -61,6 +63,7 @@ export default function Player() {
   const goTo = (ni: number) => {
     stopSpeaking();
     setCall(null);
+    setFlashDir(null);
     const ns = stepsRef.current[ni] ?? null;
     setIndex(ni);
     setRemaining(ns ? ns.durationSecs : 0);
@@ -94,18 +97,26 @@ export default function Player() {
     const pool = readPool(step.exercise.config);
     if (pool.length === 0) return;
     let timer: ReturnType<typeof setTimeout>;
+    let flashTimer: ReturnType<typeof setTimeout>;
     const schedule = () => {
       timer = setTimeout(() => {
         const move = pickMove(pool);
         if (move) {
+          const dir = pickDirection();
           setCall(move);
-          if (move.audioUrl == null) speak(move.call); // recorded audio deferred
+          setFlashDir(dir);
+          speak(dir); // announce the direction; shot name stays on screen
+          clearTimeout(flashTimer);
+          flashTimer = setTimeout(() => setFlashDir(null), 1000);
         }
         schedule();
       }, nextDelayMs(step.reaction!.minSecs, step.reaction!.maxSecs));
     };
     schedule();
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(flashTimer);
+    };
   }, [paused, step, index]);
 
   if (!loaded) {
@@ -181,9 +192,13 @@ export default function Player() {
         <Text style={{ fontSize: 40, fontWeight: "800", color: onBg, letterSpacing: 1 }}>{call.call}</Text>
       ) : null}
 
-      <Text style={{ fontSize: 88, fontWeight: "800", color: onBg, fontVariant: ["tabular-nums"] }}>
-        {remaining}
-      </Text>
+      {flashDir ? (
+        <CourtFlash direction={flashDir} />
+      ) : (
+        <Text style={{ fontSize: 88, fontWeight: "800", color: onBg, fontVariant: ["tabular-nums"] }}>
+          {remaining}
+        </Text>
+      )}
 
       {upNext ? (
         <Text style={{ color: onBg, opacity: 0.8 }}>

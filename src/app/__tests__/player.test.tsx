@@ -49,3 +49,40 @@ test("Skip advances from the first work step to the rest step", async () => {
   // 2 exercises, 2 sets — after the first exercise comes a rest step
   expect(await findByText("Rest")).toBeTruthy();
 });
+
+test("on a reaction call-out, speaks a direction and flashes the court", async () => {
+  jest.useFakeTimers();
+  mockGetWorkout.mockResolvedValueOnce({
+    id: "w1",
+    name: "Reaction WOD",
+    settings: { workSecs: 30, restSecs: 0, sets: 1, reactionMinSecs: 1, reactionMaxSecs: 1 },
+    exercises: [
+      {
+        id: "r1",
+        name: "Volley",
+        type: "reaction",
+        mediaUrl: null,
+        config: { pool: [{ call: "Volley", media_url: null, audio_url: null }] },
+      },
+    ],
+  });
+
+  const { findByText, getByTestId } = await render(<Player />);
+  await findByText("Volley");
+
+  // advance past the ~1s call-out interval
+  await act(async () => {
+    jest.advanceTimersByTime(1100);
+  });
+
+  // a direction was spoken (one of the three)
+  const spokenWithDirection = mockSpeak.mock.calls
+    .flat()
+    .some((arg) => ["left", "center", "right"].includes(arg));
+  expect(spokenWithDirection).toBe(true);
+
+  // the court flash rendered
+  expect(getByTestId("court-flash")).toBeTruthy();
+
+  jest.useRealTimers();
+});
