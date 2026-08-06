@@ -35,6 +35,11 @@ export default function Home() {
         subtitle="Explore the exercise library"
         onPress={() => router.push("/library")}
       />
+      <NavCard
+        title="History"
+        subtitle="Your completed workouts"
+        onPress={() => router.push("/history")}
+      />
 
       <Pressable
         onPress={signOut}
