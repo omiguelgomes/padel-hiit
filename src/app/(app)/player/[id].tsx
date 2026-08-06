@@ -4,8 +4,10 @@ import { View, Text, Pressable } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Image } from "expo-image";
 import { useAudioPlayer, setAudioModeAsync } from "expo-audio";
-import { getWorkout } from "../../../lib/workouts";
+import { getWorkout, toSnapshot } from "../../../lib/workouts";
 import { flattenWorkout, type WorkoutStep } from "../../../lib/workout-engine";
+import { takePendingRun } from "../../../lib/run-session";
+import { recordCompletion, type RunSnapshot } from "../../../lib/history";
 import { speak, stopSpeaking } from "../../../lib/audio";
 import { readPool, pickMove, nextDelayMs, pickDirection, type ReactionMove, type ReactionDirection } from "../../../lib/reaction";
 import CourtFlash from "../../../components/CourtFlash";
@@ -34,15 +36,34 @@ export default function Player() {
   const [call, setCall] = useState<ReactionMove | null>(null);
   const [flashDir, setFlashDir] = useState<ReactionDirection | null>(null);
   const stepsRef = useRef<WorkoutStep[]>([]);
+  const snapshotRef = useRef<RunSnapshot | null>(null);
+  const recordedRef = useRef(false);
   const beepPlayer = useAudioPlayer(beep);
 
   // Load the workout, flatten it, and start the first step.
   useEffect(() => {
     setAudioModeAsync({ playsInSilentMode: true }).catch(() => {});
     let active = true;
+
+    const pending = takePendingRun();
+    if (pending) {
+      snapshotRef.current = pending;
+      const flat = flattenWorkout(pending.exercises, pending.settings);
+      stepsRef.current = flat;
+      setSteps(flat);
+      setRemaining(flat[0]?.durationSecs ?? 0);
+      setLoaded(true);
+      if (flat.length > 0) announce(flat[0]);
+      return () => {
+        active = false;
+        stopSpeaking();
+      };
+    }
+
     getWorkout(id)
       .then((w) => {
         if (!active) return;
+        snapshotRef.current = toSnapshot(w);
         const flat = flattenWorkout(w.exercises, w.settings);
         stepsRef.current = flat;
         setSteps(flat);
@@ -59,6 +80,14 @@ export default function Player() {
 
   const step = steps[index] ?? null;
   const done = loaded && steps.length > 0 && index >= steps.length;
+
+  // Record the session once, when the workout is finished (not on exit/skip-out).
+  useEffect(() => {
+    if (done && !recordedRef.current && snapshotRef.current) {
+      recordedRef.current = true;
+      recordCompletion(snapshotRef.current).catch(() => {});
+    }
+  }, [done]);
 
   const goTo = (ni: number) => {
     stopSpeaking();
@@ -207,6 +236,7 @@ export default function Player() {
         </Text>
       ) : null}
 
+      <ControlButton label="Exit" onPress={() => router.replace("/workouts")} />
       <View style={{ flexDirection: "row", gap: spacing.md, marginTop: spacing.sm }}>
         <ControlButton label="Back" onPress={goBack} />
         <ControlButton label={paused ? "Resume" : "Pause"} onPress={() => setPaused((p) => !p)} wide />

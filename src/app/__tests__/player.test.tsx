@@ -27,7 +27,10 @@ const mockGetWorkout = jest.fn().mockResolvedValue({
 });
 jest.mock("../../lib/workouts", () => ({
   getWorkout: (...a: any[]) => mockGetWorkout(...a),
+  toSnapshot: (w: any) => ({ version: 1, name: w.name, settings: w.settings, exercises: w.exercises }),
 }));
+jest.mock("../../lib/run-session", () => ({ takePendingRun: () => null }));
+jest.mock("../../lib/history", () => ({ recordCompletion: jest.fn(() => Promise.resolve()) }));
 
 import Player from "../(app)/player/[id]";
 
