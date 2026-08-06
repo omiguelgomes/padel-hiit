@@ -109,3 +109,15 @@ export async function deleteWorkout(id: string): Promise<void> {
   const { error } = await supabase.from("workouts").delete().eq("id", id);
   if (error) throw error;
 }
+
+import type { RunSnapshot } from "./history";
+
+// Convert a loaded workout into a self-contained, immutable run snapshot.
+export function toSnapshot(detail: WorkoutDetail): RunSnapshot {
+  return {
+    version: 1,
+    name: detail.name,
+    settings: detail.settings,
+    exercises: detail.exercises,
+  };
+}

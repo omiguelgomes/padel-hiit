@@ -151,3 +151,23 @@ test("getWorkout maps settings and ordered exercises", async () => {
   });
   expect(out.exercises[1].mediaUrl).toBe("https://x/bh.mp4");
 });
+
+import { toSnapshot } from "../workouts";
+
+test("toSnapshot maps a WorkoutDetail to a versioned snapshot, dropping id", () => {
+  const detail = {
+    id: "w1",
+    name: "Padel HIIT",
+    settings: { workSecs: 40, restSecs: 15, sets: 2, reactionMinSecs: 2, reactionMaxSecs: 5 },
+    exercises: [
+      { id: "e1", name: "Jumping Jacks", type: "standard" as const, mediaUrl: null, config: {} },
+      { id: "e2", name: "Volley", type: "reaction" as const, mediaUrl: "https://x/v.mp4", config: { pool: [] } },
+    ],
+  };
+  expect(toSnapshot(detail)).toEqual({
+    version: 1,
+    name: "Padel HIIT",
+    settings: { workSecs: 40, restSecs: 15, sets: 2, reactionMinSecs: 2, reactionMaxSecs: 5 },
+    exercises: detail.exercises,
+  });
+});
