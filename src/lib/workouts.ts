@@ -1,6 +1,7 @@
 // src/lib/workouts.ts
 import { supabase } from "./supabase";
 import type { WorkoutSettings, EngineExercise } from "./workout-engine";
+import type { RunSnapshot } from "./history";
 
 export type WorkoutSummary = {
   id: string;
@@ -109,8 +110,6 @@ export async function deleteWorkout(id: string): Promise<void> {
   const { error } = await supabase.from("workouts").delete().eq("id", id);
   if (error) throw error;
 }
-
-import type { RunSnapshot } from "./history";
 
 // Convert a loaded workout into a self-contained, immutable run snapshot.
 export function toSnapshot(detail: WorkoutDetail): RunSnapshot {

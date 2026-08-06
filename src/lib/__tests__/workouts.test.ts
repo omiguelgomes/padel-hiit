@@ -37,7 +37,7 @@ jest.mock("../supabase", () => {
   };
 });
 
-import { listWorkouts, createWorkout, deleteWorkout, getWorkout } from "../workouts";
+import { listWorkouts, createWorkout, deleteWorkout, getWorkout, toSnapshot } from "../workouts";
 import { supabase } from "../supabase";
 
 beforeEach(() => {
@@ -151,8 +151,6 @@ test("getWorkout maps settings and ordered exercises", async () => {
   });
   expect(out.exercises[1].mediaUrl).toBe("https://x/bh.mp4");
 });
-
-import { toSnapshot } from "../workouts";
 
 test("toSnapshot maps a WorkoutDetail to a versioned snapshot, dropping id", () => {
   const detail = {
