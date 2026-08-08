@@ -8,7 +8,7 @@ jest.mock("expo-router", () => ({
 jest.mock("expo-image", () => ({ Image: () => null }));
 
 const mockListExercises = jest.fn().mockResolvedValue([
-  { id: "e1", name: "Push Up", type: "standard", source: "exercisedb", mediaUrl: null, config: {} },
+  { id: "e1", name: "Push Up", type: "standard", source: "exercisedb", mediaUrl: null, gifUrl: null, config: {} },
 ]);
 jest.mock("../../lib/catalog", () => ({
   listExercises: (...a: any[]) => mockListExercises(...a),

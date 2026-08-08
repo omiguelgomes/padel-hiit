@@ -21,8 +21,8 @@ const mockGetWorkout = jest.fn().mockResolvedValue({
   name: "Padel HIIT",
   settings: { workSecs: 30, restSecs: 10, sets: 2, reactionMinSecs: null, reactionMaxSecs: null },
   exercises: [
-    { id: "e1", name: "Jumping Jacks", type: "standard", mediaUrl: null, config: {} },
-    { id: "e2", name: "High Knees", type: "standard", mediaUrl: null, config: {} },
+    { id: "e1", name: "Jumping Jacks", type: "standard", mediaUrl: null, gifUrl: null, config: {} },
+    { id: "e2", name: "High Knees", type: "standard", mediaUrl: null, gifUrl: null, config: {} },
   ],
 });
 jest.mock("../../lib/workouts", () => ({
@@ -66,6 +66,7 @@ test("on a reaction call-out, speaks a direction and flashes the court", async (
         name: "Volley",
         type: "reaction",
         mediaUrl: null,
+        gifUrl: null,
         config: { pool: [{ call: "Volley", media_url: null, audio_url: null }] },
       },
     ],

@@ -75,7 +75,7 @@ export async function getWorkout(id: string): Promise<WorkoutDetail> {
   const { data, error } = await supabase
     .from("workouts")
     .select(
-      "id, name, work_secs, rest_secs, sets, reaction_min_secs, reaction_max_secs, workout_blocks(order, exercises(id, name, type, media_url, config))",
+      "id, name, work_secs, rest_secs, sets, reaction_min_secs, reaction_max_secs, workout_blocks(order, exercises(id, name, type, media_url, gif_url, config))",
     )
     .eq("id", id)
     .single();
@@ -89,6 +89,7 @@ export async function getWorkout(id: string): Promise<WorkoutDetail> {
       name: b.exercises.name,
       type: b.exercises.type,
       mediaUrl: b.exercises.media_url ?? null,
+      gifUrl: b.exercises.gif_url ?? null,
       config: b.exercises.config ?? {},
     }));
 

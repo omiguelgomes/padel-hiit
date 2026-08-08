@@ -6,6 +6,7 @@ export type CatalogExercise = {
   type: "standard" | "reaction";
   source: "exercisedb" | "padel" | "custom";
   mediaUrl: string | null;
+  gifUrl: string | null;
   config: Record<string, unknown>;
 };
 
@@ -24,6 +25,7 @@ export async function listExercises(
     type: r.type,
     source: r.source,
     mediaUrl: r.media_url ?? null,
+    gifUrl: r.gif_url ?? null,
     config: r.config ?? {},
   }));
 }

@@ -11,6 +11,7 @@ const standard: EngineExercise = {
   name: "Jumping Jacks",
   type: "standard",
   mediaUrl: null,
+  gifUrl: null,
   config: {},
 };
 const reaction: EngineExercise = {
@@ -18,6 +19,7 @@ const reaction: EngineExercise = {
   name: "Reaction Swing",
   type: "reaction",
   mediaUrl: null,
+  gifUrl: null,
   config: { pool: [] },
 };
 

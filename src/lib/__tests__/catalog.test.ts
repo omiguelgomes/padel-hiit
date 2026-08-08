@@ -6,7 +6,16 @@ jest.mock("../supabase", () => {
       type: "standard",
       source: "exercisedb",
       media_url: "https://cdn.example.com/pushup.gif",
+      gif_url: "https://cdn.example.com/pushup-720p.gif",
       config: { body_parts: ["chest"] },
+    },
+    {
+      id: "2",
+      name: "Air Squat",
+      type: "standard",
+      source: "exercisedb",
+      media_url: "https://cdn.example.com/squat.png",
+      config: {},
     },
   ];
   const builder: any = {};
@@ -33,7 +42,17 @@ test("normalizes exercises rows into CatalogExercise shape", async () => {
       type: "standard",
       source: "exercisedb",
       mediaUrl: "https://cdn.example.com/pushup.gif",
+      gifUrl: "https://cdn.example.com/pushup-720p.gif",
       config: { body_parts: ["chest"] },
+    },
+    {
+      id: "2",
+      name: "Air Squat",
+      type: "standard",
+      source: "exercisedb",
+      mediaUrl: "https://cdn.example.com/squat.png",
+      gifUrl: null,
+      config: {},
     },
   ]);
   expect((supabase as any).from).toHaveBeenCalledWith("exercises");

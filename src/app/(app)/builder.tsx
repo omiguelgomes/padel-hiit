@@ -76,6 +76,7 @@ export default function Builder() {
     name: e.name,
     type: e.type,
     mediaUrl: e.mediaUrl,
+    gifUrl: e.gifUrl,
     config: e.config,
   }));
   const settings: WorkoutSettings = {

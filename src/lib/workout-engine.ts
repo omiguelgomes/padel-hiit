@@ -4,6 +4,7 @@ export type EngineExercise = {
   name: string;
   type: "standard" | "reaction";
   mediaUrl: string | null;
+  gifUrl: string | null;
   config: Record<string, unknown>;
 };
 

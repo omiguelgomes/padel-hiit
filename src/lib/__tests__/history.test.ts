@@ -29,7 +29,7 @@ const snap: RunSnapshot = {
   version: 1,
   name: "Tuesday",
   settings: { workSecs: 30, restSecs: 10, sets: 2, reactionMinSecs: null, reactionMaxSecs: null },
-  exercises: [{ id: "e1", name: "Volley", type: "reaction", mediaUrl: null, config: {} }],
+  exercises: [{ id: "e1", name: "Volley", type: "reaction", mediaUrl: null, gifUrl: null, config: {} }],
 };
 
 beforeEach(() => {

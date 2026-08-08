@@ -124,7 +124,7 @@ test("getWorkout maps settings and ordered exercises", async () => {
       workout_blocks: [
         {
           order: 1,
-          exercises: { id: "e2", name: "Reaction Swing", type: "reaction", media_url: "https://x/bh.mp4", config: { pool: [] } },
+          exercises: { id: "e2", name: "Reaction Swing", type: "reaction", media_url: "https://x/bh.mp4", gif_url: "https://x/bh-720p.gif", config: { pool: [] } },
         },
         {
           order: 0,
@@ -147,9 +147,10 @@ test("getWorkout maps settings and ordered exercises", async () => {
   // sorted by order: standard first, reaction second
   expect(out.exercises.map((e) => e.id)).toEqual(["e1", "e2"]);
   expect(out.exercises[0]).toEqual({
-    id: "e1", name: "Jumping Jacks", type: "standard", mediaUrl: null, config: {},
+    id: "e1", name: "Jumping Jacks", type: "standard", mediaUrl: null, gifUrl: null, config: {},
   });
   expect(out.exercises[1].mediaUrl).toBe("https://x/bh.mp4");
+  expect(out.exercises[1].gifUrl).toBe("https://x/bh-720p.gif");
 });
 
 test("toSnapshot maps a WorkoutDetail to a versioned snapshot, dropping id", () => {
@@ -158,8 +159,8 @@ test("toSnapshot maps a WorkoutDetail to a versioned snapshot, dropping id", () 
     name: "Padel HIIT",
     settings: { workSecs: 40, restSecs: 15, sets: 2, reactionMinSecs: 2, reactionMaxSecs: 5 },
     exercises: [
-      { id: "e1", name: "Jumping Jacks", type: "standard" as const, mediaUrl: null, config: {} },
-      { id: "e2", name: "Volley", type: "reaction" as const, mediaUrl: "https://x/v.mp4", config: { pool: [] } },
+      { id: "e1", name: "Jumping Jacks", type: "standard" as const, mediaUrl: null, gifUrl: null, config: {} },
+      { id: "e2", name: "Volley", type: "reaction" as const, mediaUrl: "https://x/v.mp4", gifUrl: "https://x/v-720p.gif", config: { pool: [] } },
     ],
   };
   expect(toSnapshot(detail)).toEqual({
