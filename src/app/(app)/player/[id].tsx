@@ -183,7 +183,11 @@ export default function Player() {
 
   const isRest = step!.kind === "rest";
   const upNext = steps[index + 1] ?? null;
-  const animationUrl = call?.mediaUrl ?? (step!.kind === "work" ? step!.exercise.mediaUrl : null);
+  // Reaction call-out media wins; otherwise animate the exercise, falling back
+  // to its static image when no GIF exists (padel clips, or an enrichment miss).
+  const animationUrl =
+    call?.mediaUrl ??
+    (step!.kind === "work" ? step!.exercise.gifUrl ?? step!.exercise.mediaUrl : null);
 
   // Immersive full-bleed background that signals work vs. rest at a glance.
   const bg = isRest ? colors.rest : colors.primary;

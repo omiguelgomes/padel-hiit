@@ -5,7 +5,13 @@ jest.mock("expo-router", () => ({
   useLocalSearchParams: () => ({ id: "w1" }),
   useRouter: () => ({ replace: jest.fn(), back: jest.fn() }),
 }));
-jest.mock("expo-image", () => ({ Image: () => null }));
+const imageUris: (string | undefined)[] = [];
+jest.mock("expo-image", () => ({
+  Image: (props: any) => {
+    imageUris.push(props.source?.uri);
+    return null;
+  },
+}));
 jest.mock("expo-audio", () => ({
   useAudioPlayer: () => ({ play: jest.fn(), seekTo: jest.fn() }),
   setAudioModeAsync: jest.fn(() => Promise.resolve()),
@@ -21,7 +27,7 @@ const mockGetWorkout = jest.fn().mockResolvedValue({
   name: "Padel HIIT",
   settings: { workSecs: 30, restSecs: 10, sets: 2, reactionMinSecs: null, reactionMaxSecs: null },
   exercises: [
-    { id: "e1", name: "Jumping Jacks", type: "standard", mediaUrl: null, gifUrl: null, config: {} },
+    { id: "e1", name: "Jumping Jacks", type: "standard", mediaUrl: "https://x/jj.png", gifUrl: "https://x/jj-720p.gif", config: {} },
     { id: "e2", name: "High Knees", type: "standard", mediaUrl: null, gifUrl: null, config: {} },
   ],
 });
@@ -34,7 +40,10 @@ jest.mock("../../lib/history", () => ({ recordCompletion: jest.fn(() => Promise.
 
 import Player from "../(app)/player/[id]";
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  jest.clearAllMocks();
+  imageUris.length = 0;
+});
 afterEach(() => jest.useRealTimers());
 
 test("loads the workout and shows the first work step", async () => {
@@ -92,4 +101,11 @@ test("on a reaction call-out, speaks a direction and flashes the court", async (
   // flash clears after ~1s
   await act(async () => { jest.advanceTimersByTime(1000); });
   expect(queryByTestId("court-flash")).toBeNull();
+});
+
+test("prefers the animated gif over the static image during a work step", async () => {
+  const { findByText } = await render(<Player />);
+  await findByText("Jumping Jacks");
+  expect(imageUris).toContain("https://x/jj-720p.gif");
+  expect(imageUris).not.toContain("https://x/jj.png");
 });
