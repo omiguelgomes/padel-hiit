@@ -287,8 +287,8 @@ Delete these lines, and in each file remove `ScreenTitle` from the `components/u
 
 - [ ] **Step 3: Verify no unused imports remain**
 
-Run: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -v eyedropper`
-Expected: no errors from `src/`. (Bare `tsc` reports ~81 pre-existing errors inside the embedded `eyedropper/` project — those are unrelated and must be ignored.)
+Run: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -v eyedropper | grep -c "error TS"`
+Expected: **316** — the pre-existing baseline count, unchanged. (This repo has 316 pre-existing `tsc` errors at the branch base: test and mock files are compiled without jest's ambient types, so `expect`/`test`/`jest` are unresolved. Bare `tsc` adds ~81 more inside the embedded `eyedropper/` project, which the `grep -v` strips.) A count ABOVE 316 means your change introduced a type error — find it with `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -v eyedropper | grep -v __tests__ | grep -v __mocks__`.
 
 - [ ] **Step 4: Run the full suite**
 
@@ -601,8 +601,8 @@ Note `config` is rebuilt from `row.config` (the list-endpoint facets) plus the t
 
 - [ ] **Step 3: Type-check the app (the function is excluded, so this only proves nothing else broke)**
 
-Run: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -v eyedropper`
-Expected: no errors from `src/`.
+Run: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -v eyedropper | grep -c "error TS"`
+Expected: **316**, the unchanged pre-existing baseline (see Task 2 Step 3 for why). A higher count means your change introduced a type error.
 
 - [ ] **Step 4: Run the full suite**
 
@@ -755,8 +755,8 @@ Expected: PASS.
 - [ ] **Step 5: Run the full suite and type-check**
 
 Run: `npx jest --modulePathIgnorePatterns /.claude/ --testPathIgnorePatterns /node_modules/ /eyedropper/ /.claude/`
-Run: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -v eyedropper`
-Expected: tests pass; no `src/` type errors. Adding a required field to `EngineExercise` surfaces type errors in other fixtures that build exercise objects — fix each by adding `gifUrl: null`. Known locations: `src/lib/__tests__/workout-engine.test.ts:13` and `:20`, `src/lib/__tests__/history.test.ts:32`, `src/app/__tests__/builder.test.tsx:11`, and the `mockGetWorkout` fixtures in `src/app/__tests__/player.test.tsx:24-25` and `:65-71` (Task 7 revisits the player fixture).
+Run: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -v eyedropper | grep -c "error TS"`
+Expected: tests pass, and the tsc count is still **316** (the unchanged pre-existing baseline — see Task 2 Step 3). Adding a required field to `EngineExercise` surfaces type errors in other fixtures that build exercise objects — fix each by adding `gifUrl: null`. Known locations: `src/lib/__tests__/workout-engine.test.ts:13` and `:20`, `src/lib/__tests__/history.test.ts:32`, `src/app/__tests__/builder.test.tsx:11`, and the `mockGetWorkout` fixtures in `src/app/__tests__/player.test.tsx:24-25` and `:65-71` (Task 7 revisits the player fixture).
 
 - [ ] **Step 6: Commit**
 
@@ -1458,8 +1458,8 @@ Expected: PASS. The builder's existing add-on-tap tests must still pass untouche
 - [ ] **Step 6: Run the full suite and type-check**
 
 Run: `npx jest --modulePathIgnorePatterns /.claude/ --testPathIgnorePatterns /node_modules/ /eyedropper/ /.claude/`
-Run: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -v eyedropper`
-Expected: all tests pass; no `src/` type errors.
+Run: `npx tsc --noEmit -p tsconfig.json 2>&1 | grep -v eyedropper | grep -c "error TS"`
+Expected: all tests pass; the tsc count is still **316**.
 
 - [ ] **Step 7: Verify the web bundle still builds**
 
