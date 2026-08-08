@@ -7,8 +7,10 @@ import { colors, spacing, radius, font } from "../theme";
 
 export default function ExercisePicker({
   onSelect,
+  onPreview,
 }: {
   onSelect: (exercise: CatalogExercise) => void;
+  onPreview?: (exercise: CatalogExercise) => void;
 }) {
   const [search, setSearch] = useState("");
   const [items, setItems] = useState<CatalogExercise[]>([]);
@@ -66,6 +68,22 @@ export default function ExercisePicker({
               />
             )}
             <Text style={[font.body, { flexShrink: 1, fontWeight: "600" }]}>{item.name}</Text>
+            {onPreview ? (
+              <Pressable
+                onPress={(e) => {
+                  // The row itself adds the exercise in the builder — stop the
+                  // press here so previewing never also adds.
+                  e.stopPropagation();
+                  onPreview(item);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={`Preview ${item.name}`}
+                hitSlop={8}
+                style={{ marginLeft: "auto", paddingHorizontal: spacing.sm, paddingVertical: spacing.xs }}
+              >
+                <Text style={{ color: colors.primary, fontWeight: "700", fontSize: 16 }}>ⓘ</Text>
+              </Pressable>
+            ) : null}
           </Pressable>
         )}
       />
