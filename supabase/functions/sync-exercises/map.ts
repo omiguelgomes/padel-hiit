@@ -43,3 +43,39 @@ export function mapExerciseToRow(e: ApiExercise): ExerciseRow {
     },
   };
 }
+
+// The three config keys the detail endpoint contributes, plus the animated URL.
+// media_url (static PNG) comes from the list endpoint via mapExerciseToRow.
+export type DetailPatch = {
+  gif_url: string | null;
+  overview: string;
+  instructions: string[];
+  exercise_types: string[];
+};
+
+const GIF_RESOLUTION = "720p";
+
+function asRecord(v: unknown): Record<string, unknown> {
+  return typeof v === "object" && v !== null ? (v as Record<string, unknown>) : {};
+}
+
+function asString(v: unknown): string {
+  return typeof v === "string" ? v : "";
+}
+
+function asStringList(v: unknown): string[] {
+  return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+}
+
+// Total by design: the detail endpoint is fetched per-exercise during sync, and
+// one malformed or 404 response must not abort the whole catalog.
+export function mapDetailToPatch(detail: unknown): DetailPatch {
+  const data = asRecord(asRecord(detail).data);
+  const gif = asString(asRecord(data.gifUrls)[GIF_RESOLUTION]);
+  return {
+    gif_url: gif === "" ? null : gif, // hotlink, unchanged
+    overview: asString(data.overview),
+    instructions: asStringList(data.instructions),
+    exercise_types: asStringList(data.exerciseTypes),
+  };
+}
