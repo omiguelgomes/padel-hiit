@@ -11,7 +11,7 @@ import {
   type WorkoutSettings,
 } from "../../lib/workout-engine";
 import ExercisePicker from "../../components/ExercisePicker";
-import { Screen, ScreenTitle, Card, Button, TextField } from "../../components/ui";
+import { Screen, Card, Button, TextField } from "../../components/ui";
 import { colors, spacing, font } from "../../theme";
 
 export default function Builder() {
@@ -105,8 +105,6 @@ export default function Builder() {
 
   return (
     <Screen scroll>
-      <ScreenTitle>New workout</ScreenTitle>
-
       <TextField placeholder="Workout name" value={name} onChangeText={setName} />
 
       <Card style={{ gap: spacing.md }}>

@@ -3,7 +3,7 @@ import { View, Text, FlatList, Pressable } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { listHistory, type HistoryEntry } from "../../lib/history";
 import { setPendingRun } from "../../lib/run-session";
-import { Screen, ScreenTitle, Card } from "../../components/ui";
+import { Screen, Card } from "../../components/ui";
 import { colors, spacing, font } from "../../theme";
 
 function formatDate(iso: string): string {
@@ -40,8 +40,6 @@ export default function History() {
 
   return (
     <Screen>
-      <ScreenTitle>History</ScreenTitle>
-
       <FlatList
         data={items}
         keyExtractor={(x) => x.id}

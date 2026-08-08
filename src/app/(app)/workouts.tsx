@@ -6,7 +6,7 @@ import {
   deleteWorkout,
   type WorkoutSummary,
 } from "../../lib/workouts";
-import { Screen, ScreenTitle, Card, Button } from "../../components/ui";
+import { Screen, Card, Button } from "../../components/ui";
 import { colors, spacing, font } from "../../theme";
 
 export default function Workouts() {
@@ -33,7 +33,6 @@ export default function Workouts() {
 
   return (
     <Screen>
-      <ScreenTitle>My workouts</ScreenTitle>
       <Button label="+ New workout" onPress={() => router.push("/builder")} />
 
       <FlatList
