@@ -150,11 +150,14 @@ Expected: FAIL — cannot resolve `../(app)/_layout`.
 Create `src/app/(app)/_layout.tsx`:
 
 ```tsx
+import type { ComponentProps } from "react";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "../../theme";
 
-type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
+// The repo uses the automatic JSX transform (no `import React`), so the React
+// type namespace is not in scope — import the type explicitly.
+type IoniconName = ComponentProps<typeof Ionicons>["name"];
 
 function tabIcon(focused: IoniconName, unfocused: IoniconName) {
   return ({ color, size, focused: isFocused }: { color: string; size: number; focused: boolean }) => (
