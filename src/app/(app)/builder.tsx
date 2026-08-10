@@ -11,6 +11,7 @@ import {
   type WorkoutSettings,
 } from "../../lib/workout-engine";
 import ExercisePicker from "../../components/ExercisePicker";
+import ExercisePreview from "../../components/ExercisePreview";
 import { Screen, Card, Button, TextField } from "../../components/ui";
 import { colors, spacing, font } from "../../theme";
 
@@ -27,6 +28,7 @@ export default function Builder() {
   // closure under React 19 + @testing-library/react-native v14 async-act flushing.
   const exercisesRef = useRef<CatalogExercise[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [preview, setPreview] = useState<CatalogExercise | null>(null);
 
   const add = (ex: CatalogExercise) => {
     exercisesRef.current = [...exercisesRef.current, ex];
@@ -154,7 +156,8 @@ export default function Builder() {
       <Button label="Save" onPress={save} />
 
       <Text style={[font.h3, { marginTop: spacing.sm }]}>Add an exercise</Text>
-      <ExercisePicker onSelect={add} />
+      <ExercisePicker onSelect={add} onPreview={setPreview} />
+      <ExercisePreview exercise={preview} onClose={() => setPreview(null)} />
     </Screen>
   );
 }
