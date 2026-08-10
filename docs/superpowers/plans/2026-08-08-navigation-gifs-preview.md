@@ -1477,7 +1477,14 @@ git commit -m "feat: preview exercises from library and builder"
 
 ## Post-implementation (live steps, after the branch merges)
 
-These require credentials and touch production, so they run after merge, not during implementation:
+These require credentials and touch production, so they run after merge, not during implementation.
+
+> **Ordering is load-bearing: apply migration 0009 BEFORE the app code reaches users.**
+> `src/lib/workouts.ts:78` names `gif_url` explicitly in its nested select, so until the column
+> exists PostgREST rejects the whole query and `getWorkout` — and therefore the Player — fails.
+> (`listExercises` uses `select("*")`, so Library and the builder degrade gracefully; it is the
+> workout/player path that breaks.) If the deploy is already live, apply step 1 immediately: the
+> migration is a single additive `add column`, safe to run against a serving database.
 
 1. **Apply migration 0009.** The direct DB host does not resolve in this environment, so use the Management API:
    ```bash
