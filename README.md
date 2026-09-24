@@ -1,56 +1,52 @@
-# Welcome to your Expo app 👋
+# Padel HIIT
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+An interval-workout app for padel and tennis players. Build a HIIT workout, run it with a timer and audio cues, and drill your reactions: while the clock runs, the app calls out a shot at random and speaks it aloud so you react without looking at the screen. One Expo codebase runs it on the web, iOS, and Android.
 
-## Get started
+Live: https://padel-app-hiit.vercel.app
 
-1. Install dependencies
+<p align="center">
+  <img src="docs/demo.webp" alt="Building a workout, then running the player with the countdown timer and spoken reaction call-outs" width="320">
+</p>
 
-   ```bash
-   npm install
-   ```
+## How it works
 
-2. Start the app
+You build a workout from a library of exercises, setting the work time, rest, rounds, and sets for each. Running it hands the definition to a workout engine that flattens it into a plain list of timed steps, expanding the rounds and sets and dropping the trailing rest after the last one. The player renders whatever the engine emits: a large countdown, the current exercise, an animation, and an "up next" preview during rest. Beeps and spoken cues carry the workout when the phone is across the room.
 
-   ```bash
-   npx expo start
-   ```
+## Reaction exercises
 
-In the output, you'll find options to open the app in a
+This is the part built for court work. A reaction exercise carries a pool of shots, for example forehand and backhand. While the work timer runs, a sub-timer fires at a random interval you set per block (say every 2 to 5 seconds), picks a shot from the pool, speaks it through text-to-speech, and flashes the direction on a small court graphic. You keep moving and respond to the call, the same way a coach feeds you at the net.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+The call-out audio is pluggable. Device text-to-speech is the default, and if a shot has a recorded clip that plays instead, so voice files can be dropped in later without touching the code.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## History
 
-## Get a fresh project
+Every completed run is saved as an immutable snapshot of the workout as it was run, not a link to the workout. Editing or deleting a workout never rewrites your past sessions, and "repeat" rebuilds the run from the snapshot.
 
-When you're ready, run:
+## Stack
+
+- Expo (React Native) with React Native Web, so one codebase targets web, iOS, and Android
+- Supabase for auth, Postgres, storage, and an edge function that caches exercise metadata
+- expo-speech for the spoken call-outs, expo-audio for the beeps
+- TypeScript throughout
+- Jest for the tests (the workout engine and reaction driver are pure logic and covered directly)
+
+## Running locally
+
+You need a Supabase project. Copy the example env and fill in the URL and anon key:
 
 ```bash
-npm run reset-project
+cp .env.example .env.local
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Bring the schema up with the migrations in `supabase/`, then start the app:
 
-### Other setup steps
+```bash
+npm install
+npm run web
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+The engine, reaction driver, and screens run without a backend in the test suite:
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npm test
+```

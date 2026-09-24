@@ -34,8 +34,13 @@ yarn-error.*
 .env
 .env*.local
 
-# Claude Code local settings
-.claude/settings.local.json
+# agent tooling
+.claude/
+.agents/
+.superpowers/
+CLAUDE.md
+AGENTS.md
+skills-lock.json
 
 # Other projects in monorepo root (they have their own git repos)
 eyedropper/

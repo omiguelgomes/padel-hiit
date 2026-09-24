@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "padel-app",
-    "slug": "padel-app",
+    "name": "Padel HIIT",
+    "slug": "padel-hiit",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
